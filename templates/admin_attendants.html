@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Atendentes</title>
+</head>
+<body>
+    <h1>Adicionar Novo Atendente</h1>
+    <form action="/admin/attendants" method="POST">
+        <label for="name">Nome do Atendente:</label>
+        <input type="text" id="name" name="name" required><br>
+
+        <label for="clinic_id">Clínica:</label>
+        <select id="clinic_id" name="clinic_id" required>
+            {% for clinic in clinics %}
+            <option value="{{ clinic.id }}">{{ clinic.name }}</option>
+            {% endfor %}
+        </select><br>
+
+        <button type="submit">Adicionar Atendente</button>
+    </form>
+
+    <h2>Atendentes Existentes</h2>
+    <ul>
+        {% for attendant in attendants %}
+        <li>{{ attendant.name }} - Clínica: {{ attendant.clinic.name }}</li>
+        {% endfor %}
+    </ul>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+            <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+</body>
+</html>

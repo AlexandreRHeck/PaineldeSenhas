@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atendente - {{ clinic.name }}</title>
+</head>
+<body>
+    <!-- Contêiner que armazena o ID da clínica -->
+    <div id="attendant-container" data-clinic-id="{{ clinic.id }}">
+        <h3>Atendente da {{ clinic.name }}</h3>
+        <p>Localização: {{ clinic.location }}</p>
+
+        <h3>Selecione o Guichê:</h3>
+        <select id="guiche-select">
+            <option value="1">Guichê 1</option>
+            <option value="2">Guichê 2</option>
+            <option value="3">Guichê 3</option>
+            <option value="4">Guichê 4</option>
+        </select>
+        <button id="generate-password">Gerar Senha</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        // Pega o ID da clínica do atributo data-clinic-id
+        var clinic_id = document.getElementById('attendant-container').getAttribute('data-clinic-id');
+        console.log(clinic_id);  // Verifique se o valor está correto no console
+
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        document.getElementById('generate-password').onclick = function() {
+            var guiche = document.getElementById('guiche-select').value;
+            socket.emit('generate_password', { guiche: guiche, clinic_id: clinic_id });
+        };
+    </script>
+</body>
+</html>

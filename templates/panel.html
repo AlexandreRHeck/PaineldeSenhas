@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Senhas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #003366;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #panel-container {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            height: 90%;
+            background-color: #003366;
+            color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+
+        #header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #005580;
+            padding: 15px;
+            font-size: 30px;
+            border-radius: 8px;
+        }
+
+        #header div {
+            text-align: center;
+        }
+
+        #header span {
+            font-size: 18px;
+        }
+
+        #header h1 {
+            margin: 0;
+            font-size: 50px;
+        }
+
+        #content {
+            display: flex;
+            flex: 1;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        #recent-calls {
+            flex: 1;
+            background-color: #005580;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #recent-calls h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #recent-calls ul {
+            list-style: none;
+            padding: 0;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        #recent-calls li {
+            margin: 5px 0;
+            font-size: 20px;
+        }
+
+        #video-container {
+            flex: 2;
+            background-color: #005580;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        #video-container h3 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        #video-container video {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        #footer {
+            text-align: center;
+            background-color: #002244;
+            padding: 10px;
+            font-size: 18px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div id="panel-container">
+        <!-- Cabeçalho com senha e guichê -->
+        <div id="header">
+            <div>
+                <span>Senha</span>
+                <h1 id="current-password">0</h1>
+            </div>
+            <div>
+                <span>Guichê</span>
+                <h1 id="current-guiche">0</h1>
+            </div>
+        </div>
+
+        <!-- Conteúdo com chamadas recentes e vídeo -->
+        <div id="content">
+            <div id="recent-calls">
+                <h3>Últimas Chamadas</h3>
+                <ul id="recent-list">
+                    <!-- As senhas serão exibidas aqui -->
+                </ul>
+            </div>
+            <div id="video-container">
+                <h3>Vídeo da Clínica</h3>
+                <video id="clinic-video" controls autoplay muted loop>
+                    <source src="/static/clinic_video.mp4" type="video/mp4">
+                    Seu navegador não suporta vídeos HTML5.
+                </video>
+            </div>
+        </div>
+
+        <!-- Rodapé com data e hora -->
+        <div id="footer">
+            <span id="current-date"></span> | <span id="current-time"></span>
+        </div>
+
+        <!-- Elemento de áudio para o som da senha -->
+        <audio id="sound-alert" src="/static/som_chamada.mp3" preload="auto"></audio>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
+
+        // Certifique-se de que o clinic_id está sendo passado corretamente
+        var clinic_id = {{ clinic.id | tojson }};
+
+        // Juntar-se à sala da clínica
+        socket.emit('join', { 'clinic_id': clinic_id });
+
+        // Receber novas senhas em tempo real
+        socket.on('new_password', function(data) {
+            console.log("Recebendo nova senha: ", data);
+            document.getElementById('current-password').innerHTML = data.password;
+            document.getElementById('current-guiche').innerHTML = data.guiche;
+
+            // Reproduzir som de alerta
+            var sound = document.getElementById('sound-alert');
+            sound.play().catch(function(error) {
+                console.log("Erro ao tentar reproduzir o som: ", error);
+            });
+
+            // Atualizar lista de chamadas recentes
+            var recentList = document.getElementById('recent-list');
+            var newItem = document.createElement('li');
+            var now = new Date().toLocaleTimeString();
+            newItem.innerHTML = 'Senha: ' + data.password + ' | Guichê: ' + data.guiche + ' | Hora: ' + now;
+            recentList.insertBefore(newItem, recentList.firstChild);
+
+            // Limitar o número de itens na lista de chamadas
+            if (recentList.children.length > 5) {
+                recentList.removeChild(recentList.lastChild);
+            }
+        });
+
+        // Atualizar data e hora no rodapé
+        function updateDateTime() {
+            var now = new Date();
+            var date = now.toLocaleDateString();
+            var time = now.toLocaleTimeString();
+            document.getElementById('current-date').innerHTML = date;
+            document.getElementById('current-time').innerHTML = time;
+        }
+
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+    </script>
+</body>
+</html>
